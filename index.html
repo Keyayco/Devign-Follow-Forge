@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="Devign FollowForge — don't lose the job because you forgot to follow up.">
+<title>Devign FollowForge</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="appbar">
+  <div class="appbar-row">
+    <div>
+      <div class="appbar-title" id="businessName">Devign FollowForge</div>
+      <div class="appbar-sub" id="appbarSub">Who do I need to follow up with today?</div>
+    </div>
+    <button class="btn btn-primary btn-add" id="btnNewLead" type="button">+ Lead</button>
+  </div>
+</header>
+
+<main id="views">
+
+  <!-- DASHBOARD -->
+  <section class="view" id="view-dashboard">
+    <h2 class="view-title">Today</h2>
+    <div class="stat-grid">
+      <button class="stat stat-danger" type="button" data-jump="overdue">
+        <span class="stat-value" id="statOverdue">0</span>
+        <span class="stat-label">Overdue</span>
+      </button>
+      <button class="stat stat-warn" type="button" data-jump="today">
+        <span class="stat-value" id="statToday">0</span>
+        <span class="stat-label">Due today</span>
+      </button>
+      <button class="stat" type="button" data-jump="upcoming">
+        <span class="stat-value" id="statUpcoming">0</span>
+        <span class="stat-label">Upcoming</span>
+      </button>
+    </div>
+
+    <h2 class="view-title">Needs attention now</h2>
+    <div id="dashAttention" class="list"></div>
+
+    <h2 class="view-title">Quotes that need follow-up</h2>
+    <div id="dashQuotes" class="list"></div>
+
+    <h2 class="view-title">Pipeline</h2>
+    <div class="pipe-grid" id="dashPipeline"></div>
+
+    <h2 class="view-title">Value</h2>
+    <div class="value-grid">
+      <div class="value-card">
+        <span class="value-label">Total quoted</span>
+        <span class="value-amount" id="valQuoted">R0</span>
+      </div>
+      <div class="value-card">
+        <span class="value-label">Potential pipeline</span>
+        <span class="value-amount" id="valPipeline">R0</span>
+      </div>
+      <div class="value-card value-won">
+        <span class="value-label">Won</span>
+        <span class="value-amount" id="valWon">R0</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOLLOW-UPS -->
+  <section class="view hidden" id="view-followups">
+    <h2 class="view-title danger-text">Overdue</h2>
+    <div class="list" id="fuOverdue"></div>
+    <h2 class="view-title">Today</h2>
+    <div class="list" id="fuToday"></div>
+    <h2 class="view-title">Upcoming</h2>
+    <div class="list" id="fuUpcoming"></div>
+  </section>
+
+  <!-- LEADS -->
+  <section class="view hidden" id="view-leads">
+    <div class="filters">
+      <input class="input" id="searchInput" type="search" placeholder="Search name, phone or service" autocomplete="off">
+      <div class="filter-row">
+        <select class="input" id="filterStatus" aria-label="Filter by status">
+          <option value="ALL">All statuses</option>
+        </select>
+        <select class="input" id="filterDate" aria-label="Filter by follow-up date">
+          <option value="ALL">Any follow-up date</option>
+          <option value="OVERDUE">Overdue</option>
+          <option value="TODAY">Today</option>
+          <option value="UPCOMING">Upcoming</option>
+          <option value="NONE">No date set</option>
+        </select>
+      </div>
+    </div>
+    <div class="list" id="leadList"></div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="view hidden" id="view-pipeline">
+    <div id="pipelineBoard"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view hidden" id="view-settings">
+    <h2 class="view-title">Business</h2>
+    <form id="settingsForm" class="card form">
+      <label class="field">
+        <span>Business name</span>
+        <input class="input" name="businessName" type="text" placeholder="e.g. Cape Flow Plumbing">
+      </label>
+      <label class="field">
+        <span>Business WhatsApp number</span>
+        <input class="input" name="businessPhone" type="tel" inputmode="tel" placeholder="e.g. 082 555 1234">
+      </label>
+      <label class="field">
+        <span>Default follow-up message</span>
+        <textarea class="input" name="defaultTemplate" rows="3"></textarea>
+      </label>
+      <h3 class="sub-title">Message templates</h3>
+      <label class="field">
+        <span>Initial follow-up</span>
+        <textarea class="input" name="tpl_initial" rows="3"></textarea>
+      </label>
+      <label class="field">
+        <span>Quote follow-up</span>
+        <textarea class="input" name="tpl_quote" rows="3"></textarea>
+      </label>
+      <label class="field">
+        <span>Final follow-up</span>
+        <textarea class="input" name="tpl_final" rows="3"></textarea>
+      </label>
+      <p class="hint">Use [Name] and [Service] as placeholders.</p>
+      <button class="btn btn-primary btn-block" type="submit">Save settings</button>
+    </form>
+
+    <h2 class="view-title">Data</h2>
+    <div class="card form">
+      <button class="btn btn-block" id="btnLoadDemo" type="button">Reload demo data</button>
+      <button class="btn btn-danger btn-block" id="btnClearData" type="button">Clear all data</button>
+      <p class="hint">Data is stored in this browser only (localStorage).</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab active" type="button" data-view="dashboard">
+    <span class="tab-icon">▦</span><span>Today</span>
+  </button>
+  <button class="tab" type="button" data-view="followups">
+    <span class="tab-icon">⏰</span><span>Follow-ups</span>
+    <span class="badge hidden" id="tabBadge">0</span>
+  </button>
+  <button class="tab" type="button" data-view="leads">
+    <span class="tab-icon">☰</span><span>Leads</span>
+  </button>
+  <button class="tab" type="button" data-view="pipeline">
+    <span class="tab-icon">▤</span><span>Pipeline</span>
+  </button>
+  <button class="tab" type="button" data-view="settings">
+    <span class="tab-icon">⚙</span><span>Settings</span>
+  </button>
+</nav>
+
+<!-- LEAD FORM MODAL -->
+<div class="modal hidden" id="leadModal" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="leadModalTitle">New lead</h2>
+      <button class="icon-btn" type="button" data-close-modal="leadModal" aria-label="Close">✕</button>
+    </div>
+    <form class="sheet-body form" id="leadForm">
+      <input type="hidden" name="id">
+      <label class="field">
+        <span>Customer name *</span>
+        <input class="input" name="customerName" type="text" required>
+      </label>
+      <label class="field">
+        <span>Phone *</span>
+        <input class="input" name="phone" type="tel" inputmode="tel" placeholder="082 555 1234" required>
+      </label>
+      <label class="field">
+        <span>Service *</span>
+        <input class="input" name="service" type="text" list="serviceList" required>
+      </label>
+      <datalist id="serviceList">
+        <option>Plumbing</option><option>Construction</option><option>Cleaning</option>
+        <option>Garden services</option><option>Electrical</option><option>Roofing</option>
+        <option>Painting</option><option>Appliance repair</option>
+      </datalist>
+      <label class="field">
+        <span>Enquiry *</span>
+        <textarea class="input" name="enquiry" rows="3" required></textarea>
+      </label>
+      <label class="field">
+        <span>Source</span>
+        <select class="input" name="source">
+          <option value="">—</option>
+          <option>WhatsApp</option><option>Phone call</option><option>Facebook</option>
+          <option>Referral</option><option>Walk-in</option><option>Website</option><option>Other</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select class="input" name="status" id="leadFormStatus"></select>
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Quote amount (R)</span>
+          <input class="input" name="quoteAmount" type="number" inputmode="decimal" min="0" step="0.01">
+        </label>
+        <label class="field">
+          <span>Quote date</span>
+          <input class="input" name="quoteDate" type="date">
+        </label>
+      </div>
+      <label class="field">
+        <span>Follow-up date</span>
+        <input class="input" name="followUpDate" type="date">
+      </label>
+      <label class="field">
+        <span>Note (optional)</span>
+        <textarea class="input" name="note" rows="2" placeholder="Adds a dated note entry"></textarea>
+      </label>
+      <div class="sheet-actions">
+        <button class="btn btn-block" type="button" data-close-modal="leadModal">Cancel</button>
+        <button class="btn btn-primary btn-block" type="submit">Save lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- LEAD DETAIL MODAL -->
+<div class="modal hidden" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="detailTitle">Lead</h2>
+      <button class="icon-btn" type="button" data-close-modal="detailModal" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- WHATSAPP MODAL -->
+<div class="modal hidden" id="waModal" role="dialog" aria-modal="true" aria-labelledby="waTitle">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="waTitle">Follow up on WhatsApp</h2>
+      <button class="icon-btn" type="button" data-close-modal="waModal" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body form">
+      <p class="hint" id="waTo"></p>
+      <div class="chips" id="waTemplates"></div>
+      <label class="field">
+        <span>Message (edit before sending)</span>
+        <textarea class="input" id="waMessage" rows="5"></textarea>
+      </label>
+      <p class="hint">WhatsApp opens with this message pre-filled. You still press Send.</p>
+      <div class="sheet-actions">
+        <button class="btn btn-block" type="button" data-close-modal="waModal">Cancel</button>
+        <button class="btn btn-wa btn-block" id="waOpen" type="button">Open WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
