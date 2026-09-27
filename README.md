@@ -1,53 +1,104 @@
-# Devign FollowForge
+# Contractor Lead-to-Cash PWA
 
-Mobile-first follow-up manager for South African local service businesses.
+A mobile-first vanilla HTML/CSS/JavaScript PWA for small South African contractors and trades businesses. It supports the workflow:
 
-**Don't lose the job because you forgot to follow up.**
+**Lead → Customer → Quote → Follow-up → Job → Payment → Customer History**
 
-FollowForge answers one question the moment you open it: *who do I need to follow up with today?*
+Built for businesses currently working from WhatsApp, calls, paper and spreadsheets.
 
-## Run it
+## Technology
 
-No build step, no dependencies. Open `index.html` in a browser, or serve the folder:
+- Vanilla HTML, CSS and JavaScript
+- Vite for local dev/static build only
+- Supabase Auth + PostgreSQL + Storage
+- Browser-side PDF generation with jsPDF
+- Installable PWA with service worker
+- Standard `wa.me` WhatsApp links
+- Normal Google Maps links
+- Static hosting compatible with Netlify / Cloudflare Pages / Vercel static output
+
+No React UI, no WhatsApp API, no SMS API, no paid maps, no payment gateway, no paid analytics.
+
+## R0 upfront design
+
+The MVP can be demonstrated on free tiers:
+
+- Supabase free project
+- GitHub repository
+- Netlify/Cloudflare Pages free static hosting
+- WhatsApp `wa.me` links
+- Google Maps normal links
+- Browser-generated PDFs
+
+Risks: free tiers have limits; Supabase may pause inactive free projects; custom domains may have external DNS/domain costs; SMS/WhatsApp Business/payment processing would be paid future integrations.
+
+## Setup
+
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL editor, or apply equivalent schema through your platform migration flow.
+3. In Supabase Auth, enable email/password auth.
+4. Copy `.env.example` to `.env` and fill:
 
 ```bash
-python3 -m http.server 8000
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-public-anon-key
 ```
 
-Deploy by pushing the repo to GitHub Pages, Netlify or Vercel — it is a static site.
+5. Install and run:
 
-## What it does
-
-- **Today** — overdue / due today / upcoming counts, the leads needing attention now, quotes awaiting follow-up, pipeline counts and quoted / pipeline / won value.
-- **Follow-ups** — queue grouped into Overdue, Today, Upcoming with a *Follow up on WhatsApp* button on every item.
-- **Leads** — search by name, phone or service; filter by status and follow-up date.
-- **Pipeline** — leads grouped by the six statuses: NEW, CONTACTED, QUOTED, FOLLOW-UP, WON, LOST.
-- **Lead detail** — customer, job, quote, follow-up date, dated notes (append-only), edit / status change / WhatsApp / Won / Lost / delete.
-- **Settings** — business name, business WhatsApp number, default message and the three editable templates.
-
-## WhatsApp
-
-There is no WhatsApp API integration and no automated sending. The button builds a `wa.me`
-link with a pre-filled, editable message (SA numbers like `082 555 1234` are converted to
-`27821234567`). WhatsApp opens with the text ready — you press Send.
-
-## Storage
-
-Everything lives in the browser's `localStorage`:
-
-- `followforge.leads.v1`
-- `followforge.settings.v1`
-- `followforge.seeded.v1`
-
-Demo data is seeded on first open so the app is useful immediately. Reload or clear it in Settings.
-
-## Files
-
-```
-index.html   markup for all views and modals
-styles.css   mobile-first styles (360px up)
-app.js       state, storage, rendering, events, WhatsApp helpers
+```bash
+npm install
+npm run dev
 ```
 
-`RULES_ARCHITECTURE.md`, `STATE.md`, `HANDOVER.md` and `LOGS_BUGS.md` are the AI handover
-source-of-truth files — read them before making substantial changes.
+6. Register a user in the app and create your first business.
+
+## Deployment
+
+### Netlify
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Add env vars in Netlify site settings.
+
+### Cloudflare Pages
+- Build command: `npm run build`
+- Output directory: `dist`
+- Add env vars in Pages settings.
+
+### GitHub
+Push this folder to GitHub. Do not commit `.env`.
+
+## Acceptance journey
+
+Test:
+1. Register/login.
+2. Create business profile.
+3. Add lead.
+4. Convert lead to customer.
+5. Create quote with line items, VAT and deposit.
+6. Generate PDF.
+7. Open WhatsApp quote link.
+8. Accept quote.
+9. Confirm follow-up completed, job created, payment record created.
+10. Update job/payment.
+11. Open customer history.
+12. Open public business page at `/business/<slug>`.
+13. Install PWA and verify service worker registration.
+
+## Security
+
+- Uses Supabase Auth sessions.
+- RLS policies isolate by `business_members`.
+- Storage bucket paths start with `business_id`; policies check business membership.
+- No service-role keys or private secrets in browser code.
+- POPIA-conscious minimal collection; not a POPIA certification.
+
+## Documentation
+
+See:
+- `docs/SOURCE_OF_TRUTH.md`
+- `docs/ARCHITECTURE.md`
+- `docs/STATE.md`
+- `docs/HANDOFF.md`
+- `docs/DEV_LOG.md`
+- `docs/BUGS.md`

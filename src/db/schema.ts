@@ -1,0 +1,175 @@
+import { pgTable, uuid, text, timestamp, numeric, boolean, integer, jsonb, date, time, index } from "drizzle-orm/pg-core";
+
+export const businesses = pgTable("businesses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  owner_id: uuid("owner_id").notNull(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  logo_path: text("logo_path"),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  email: text("email"),
+  address: text("address"),
+  service_area: text("service_area"),
+  services: text("services"),
+  hours: text("hours"),
+  description: text("description"),
+  vat_rate: numeric("vat_rate").notNull().default("15"),
+  default_terms: text("default_terms"),
+  public_enabled: boolean("public_enabled").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ ownerIdx: index("businesses_owner_idx").on(table.owner_id), slugIdx: index("businesses_slug_idx").on(table.slug) }));
+
+export const business_members = pgTable("business_members", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id").notNull(),
+  role: text("role").notNull().default("owner"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ userIdx: index("business_members_user_idx").on(table.user_id), businessIdx: index("business_members_business_idx").on(table.business_id) }));
+
+export const customers = pgTable("customers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  email: text("email"),
+  address: text("address"),
+  notes: text("notes"),
+  photo_paths: jsonb("photo_paths").notNull().default([]),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("customers_business_idx").on(table.business_id), nameIdx: index("customers_name_idx").on(table.name) }));
+
+export const leads = pgTable("leads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  customer_id: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  customer_name: text("customer_name").notNull(),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  email: text("email"),
+  job_type: text("job_type"),
+  description: text("description"),
+  location: text("location"),
+  estimated_value: numeric("estimated_value").default("0"),
+  source: text("source"),
+  notes: text("notes"),
+  photo_paths: jsonb("photo_paths").notNull().default([]),
+  status: text("status").notNull().default("New"),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("leads_business_idx").on(table.business_id), statusIdx: index("leads_status_idx").on(table.status) }));
+
+export const quotes = pgTable("quotes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  customer_id: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  lead_id: uuid("lead_id").references(() => leads.id, { onDelete: "set null" }),
+  quote_number: text("quote_number").notNull(),
+  issue_date: date("issue_date").notNull(),
+  expiry_date: date("expiry_date"),
+  description: text("description"),
+  discount: numeric("discount").notNull().default("0"),
+  vat_enabled: boolean("vat_enabled").notNull().default(false),
+  vat_rate: numeric("vat_rate").notNull().default("15"),
+  deposit: numeric("deposit").notNull().default("0"),
+  notes: text("notes"),
+  terms: text("terms"),
+  status: text("status").notNull().default("Draft"),
+  subtotal: numeric("subtotal").notNull().default("0"),
+  vat_amount: numeric("vat_amount").notNull().default("0"),
+  total: numeric("total").notNull().default("0"),
+  balance: numeric("balance").notNull().default("0"),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("quotes_business_idx").on(table.business_id), statusIdx: index("quotes_status_idx").on(table.status) }));
+
+export const quote_items = pgTable("quote_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  quote_id: uuid("quote_id").notNull().references(() => quotes.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  quantity: numeric("quantity").notNull().default("1"),
+  unit_price: numeric("unit_price").notNull().default("0"),
+  sort_order: integer("sort_order").notNull().default(0),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ quoteIdx: index("quote_items_quote_idx").on(table.quote_id) }));
+
+export const follow_ups = pgTable("follow_ups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  quote_id: uuid("quote_id").references(() => quotes.id, { onDelete: "cascade" }),
+  customer_id: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  due_date: date("due_date").notNull(),
+  status: text("status").notNull().default("Follow-up Due"),
+  result: text("result").notNull().default("Waiting"),
+  notes: text("notes"),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("followups_business_idx").on(table.business_id), dueIdx: index("followups_due_idx").on(table.due_date) }));
+
+export const jobs = pgTable("jobs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  quote_id: uuid("quote_id").references(() => quotes.id, { onDelete: "set null" }),
+  customer_id: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  address: text("address"),
+  description: text("description").notNull(),
+  job_date: date("job_date"),
+  job_time: time("job_time"),
+  worker: text("worker"),
+  notes: text("notes"),
+  photo_paths: jsonb("photo_paths").notNull().default([]),
+  status: text("status").notNull().default("Booked"),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("jobs_business_idx").on(table.business_id), dateIdx: index("jobs_date_idx").on(table.job_date) }));
+
+export const payments = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  job_id: uuid("job_id").references(() => jobs.id, { onDelete: "set null" }),
+  quote_id: uuid("quote_id").references(() => quotes.id, { onDelete: "set null" }),
+  customer_id: uuid("customer_id").references(() => customers.id, { onDelete: "set null" }),
+  amount: numeric("amount").notNull().default("0"),
+  deposit: numeric("deposit").notNull().default("0"),
+  amount_paid: numeric("amount_paid").notNull().default("0"),
+  balance: numeric("balance").notNull().default("0"),
+  status: text("status").notNull().default("Unpaid"),
+  payment_date: date("payment_date"),
+  method: text("method"),
+  payment_link: text("payment_link"),
+  notes: text("notes"),
+  archived: boolean("archived").notNull().default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("payments_business_idx").on(table.business_id), statusIdx: index("payments_status_idx").on(table.status) }));
+
+export const message_templates = pgTable("message_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("templates_business_idx").on(table.business_id) }));
+
+export const activity_logs = pgTable("activity_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  business_id: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  entity_type: text("entity_type").notNull(),
+  entity_id: uuid("entity_id"),
+  action: text("action").notNull(),
+  note: text("note"),
+  created_by: uuid("created_by"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({ businessIdx: index("activity_business_idx").on(table.business_id), entityIdx: index("activity_entity_idx").on(table.entity_type, table.entity_id) }));
