@@ -2,11 +2,11 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { supabaseAdmin } from "./supabase-admin.js";
 import { requireBusinessAccess } from "./auth.js";
 
-export async function listByBusiness(req: VercelRequest, res: VercelResponse, table: string, order = "created_at") {
+export async function listByBusiness(req: VercelRequest, res: VercelResponse, table: string, order = "created_at", ascending = false) {
   const businessId = String(req.query.business_id || "");
   const access = await requireBusinessAccess(req, res, businessId);
   if (!access) return;
-  const { data, error } = await supabaseAdmin.from(table).select("*").eq("business_id", businessId).order(order, { ascending: false });
+  const { data, error } = await supabaseAdmin.from(table).select("*").eq("business_id", businessId).order(order, { ascending });
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json(data || []);
 }
@@ -33,5 +33,5 @@ export async function patchById(req: VercelRequest, res: VercelResponse, table: 
 }
 
 export async function archiveById(req: VercelRequest, res: VercelResponse, table: string, id: string) {
-  return patchById(req, res, table, id, { archived_at: new Date().toISOString() });
+  return patchById(req, res, table, id, { archived: true });
 }
